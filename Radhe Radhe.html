@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Radhashtami - @Baddalmeher - 🦚 Radhe Radhe 🦚 - DOB 89</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;1,400&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            background-color: #030102;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+            touch-action: none; 
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            z-index: 1;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.7);
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #intro {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            transform: translateY(-50%);
+            text-align: center;
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(50px, 8vw, 4.5rem);
+            font-weight: 400;
+            letter-spacing: 2px;
+            color: #ffb6c1; 
+            text-shadow: 0 0 10px #ffb6c1, 0 0 20px #ff69b4, 0 0 40px #ff1493, 0 0 80px #ff007f;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        #reveal-text {
+            position: absolute; 
+            bottom: 5%; 
+            left: 50%; 
+            transform: translate(-50%, 30px); 
+            z-index: 20; 
+            text-align: center; 
+            opacity: 0; 
+            transition: all 3s cubic-bezier(0.25, 1, 0.5, 1); 
+            pointer-events: none;
+            width: 100%;
+        }
+        
+        .main-text {
+            font-family: 'Playfair Display', serif; 
+            font-size: clamp(35px, 6vw, 55px);
+            color: #ffd700;
+            text-shadow: 0 0 10px #ffd700, 0 0 20px #ffaa00, 0 0 40px #ff69b4, 0 0 80px #ff1493; 
+            margin-bottom: 5px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+        
+        .sub-text {
+            font-family: 'Poppins', sans-serif; 
+            font-size: clamp(10px, 2vw, 16px); 
+            color: #ffdfeb;
+            letter-spacing: 5px; 
+            text-transform: uppercase; 
+            font-weight: 300;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        
+        #top-greeting {
+            position: absolute;
+            top: 4%;
+            left: 50%;
+            transform: translate(-50%, -20px);
+            z-index: 25;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 1.8s cubic-bezier(0.25, 1, 0.5, 1), transform 1.8s cubic-bezier(0.25, 1, 0.5, 1);
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .greeting-text {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(36px, 6vw, 54px);
+            color: #ffd700;
+            text-shadow: 0 0 12px #ffD700, 0 0 25px #ff69b4, 0 0 45px #ff1493;
+            letter-spacing: 2px;
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-audio" loop autoplay muted>
+        <source src="https://cdn.pixabay.com/download/audio/2022/02/07/audio_c35f793b5a.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="loading">@Baddalmeher...</div>
+    <div id="intro">🦚 Radhe Radhe 🦚</div>
+    
+    
+    <div id="top-greeting">
+        <div class="greeting-text">🪷 Happy Radhaastami 🦚</div>
+    </div>
+
+    <div id="reveal-text">
+        <div class="main-text">Jai Shri Radhe</div>
+        <div class="sub-text">The Lotus of Vrindavan</div>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+
+<script>
+    const CONFIG = {
+        blackBackgroundThreshold: 15, 
+        alphaThreshold: 50,           
+        formationDuration: 15000,     
+        maxEntryDelay: 3000,          
+        auraPercentage: 0.05,         
+        repelRadius: 100,             
+        repelForce: 25                
+    };
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { alpha: false }); 
+    let width, height, cx, cy, baseRadius, dpr, scaleFactor;
+    
+    let currentZoom = 1.0;
+    let targetZoom = 1.0;
+    let isMobile = window.innerWidth < 768;
+    let imageStep = isMobile ? 3 : 2; 
+
+    
+    let petals = [];
+    const totalPetals = 80; 
+    let currentPetalIndex = 0;
+    let phase = 0; 
+    let time = 0;
+    let stamenOpacity = 0; 
+
+  
+    let particles = [];
+    let mode = 'WAITING'; 
+    let startTime = 0;
+    const mouse = { x: -1000, y: -1000, isActive: false };
+    let imgMaxRadius = 0; 
+    
+    
+    let originalImg = null; 
+    let finalImageOpacity = 0;
+    let blendGlow = 0;
+
+    function init() {
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
+
+        const updatePointer = (e) => {
+            const touch = e.touches ? e.touches[0] : e;
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = ((touch.clientX - rect.left) * dpr - cx) / currentZoom;
+            mouse.y = ((touch.clientY - rect.top) * dpr - cy) / currentZoom;
+            mouse.isActive = true;
+        };
+        const resetPointer = () => { mouse.isActive = false; };
+
+        window.addEventListener('pointermove', updatePointer);
+        window.addEventListener('pointerdown', updatePointer);
+        window.addEventListener('pointerup', resetPointer);
+        window.addEventListener('pointerleave', resetPointer);
+
+        loadImageAndProcess();
+    }
+
+    function resizeCanvas() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2); 
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        
+        cx = canvas.width / 2;
+        cy = canvas.height / 2;
+        
+        baseRadius = Math.min(canvas.width, canvas.height) * 0.18;
+        isMobile = width < 768;
+        imageStep = isMobile ? 3 : 2;
+        
+        petals.forEach(p => p.updateDimensions());
+
+        if (particles.length > 0) {
+            updateParticleTargets();
+        }
+    }
+
+    function loadImageAndProcess() {
+        const img = new Image();
+        img.crossOrigin = "Anonymous"; 
+        img.src = '276520.png'; 
+        
+        img.onload = () => {
+            originalImg = img; 
+            document.getElementById('loading').innerText = "Ready";
+            setTimeout(() => {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('loading').style.display = 'none';
+                    const introText = document.getElementById('intro');
+                    introText.style.opacity = '1';
+                    setTimeout(() => {
+                        introText.style.opacity = '0';
+                        setTimeout(() => {
+                            processImage(img);
+                            spawnPetals();
+                            requestAnimationFrame(animate);
+                        }, 1000); 
+                    }, 2000); 
+                }, 500);
+            }, 1000); 
+        };
+        
+        img.onerror = () => {
+            document.getElementById('loading').innerText = "Image not found";
+            setTimeout(() => {
+                document.getElementById('loading').style.opacity = '0';
+                setTimeout(() => {
+                    spawnPetals();
+                    requestAnimationFrame(animate);
+                }, 1000);
+            }, 1500);
+        };
+    }
+
+    function processImage(img) {
+        const offCanvas = document.createElement('canvas');
+        const offCtx = offCanvas.getContext('2d');
+        
+        const processWidth = Math.min(img.width, 300); 
+        const processHeight = (img.height / img.width) * processWidth;
+        
+        offCanvas.width = processWidth;
+        offCanvas.height = processHeight;
+        offCtx.drawImage(img, 0, 0, processWidth, processHeight);
+        
+        const imageData = offCtx.getImageData(0, 0, processWidth, processHeight);
+        const data = imageData.data;
+        let validPixels = [];
+        
+        const cxImg = processWidth / 2;
+        const cyImg = processHeight / 2;
+        imgMaxRadius = Math.min(processWidth, processHeight) / 2;
+
+        for (let y = 0; y < processHeight; y += imageStep) {
+            for (let x = 0; x < processWidth; x += imageStep) {
+                let dx = x - cxImg;
+                let dy = y - cyImg;
+                
+                if (Math.sqrt(dx * dx + dy * dy) > (imgMaxRadius * 1.02)) continue; 
+
+                const i = (y * processWidth + x) * 4;
+                const r = data[i];
+                const g = data[i+1];
+                const b = data[i+2];
+                const a = data[i+3];
+
+                if (a > CONFIG.alphaThreshold && (r + g + b) > CONFIG.blackBackgroundThreshold) {
+                    validPixels.push({ x, y, color: `rgb(${r},${g},${b})` });
+                }
+            }
+        }
+
+        particles = validPixels.map(p => new Particle(p.x - cxImg, p.y - cyImg, p.color));
+        updateParticleTargets();
+    }
+
+    function updateParticleTargets() {
+        if(imgMaxRadius === 0) return;
+        const targetRadius = baseRadius * 0.42; 
+        scaleFactor = targetRadius / imgMaxRadius;
+        
+        const dynamicParticleSize = (imageStep * scaleFactor) * 1.6; 
+
+        particles.forEach(p => {
+            p.targetX = (p.relX * scaleFactor);
+            p.targetY = (p.relY * scaleFactor);
+            p.size = dynamicParticleSize + Math.random() * 0.5;
+        });
+    }
+
+    class Particle {
+        constructor(relX, relY, color) {
+            this.relX = relX;
+            this.relY = relY;
+            this.color = color;
+            this.size = 2; 
+            
+            this.isAura = Math.random() < CONFIG.auraPercentage;
+            this.phase = Math.random() * Math.PI * 2;
+            this.hoverSpeed = 0.01 + Math.random() * 0.02;
+            this.hoverRadius = (1 + Math.random() * 3) * dpr;
+
+            this.setOutsideStart();
+            this.x = this.startX;
+            this.y = this.startY;
+            this.targetX = 0;
+            this.targetY = 0;
+            
+            this.delay = Math.random() * CONFIG.maxEntryDelay;
+            this.duration = CONFIG.formationDuration; 
+        }
+
+        setOutsideStart() {
+            const edge = Math.floor(Math.random() * 4);
+            const offset = 200 * dpr; 
+            let sx, sy;
+            if (edge === 0) { 
+                sx = Math.random() * canvas.width;
+                sy = -offset - Math.random() * 500;
+            } else if (edge === 1) { 
+                sx = canvas.width + offset + Math.random() * 500;
+                sy = Math.random() * canvas.height;
+            } else if (edge === 2) { 
+                sx = Math.random() * canvas.width;
+                sy = canvas.height + offset + Math.random() * 500;
+            } else { 
+                sx = -offset - Math.random() * 500;
+                sy = Math.random() * canvas.height;
+            }
+            this.startX = sx - cx;
+            this.startY = sy - cy;
+        }
+
+        update(elapsed) {
+            if (mode === 'ENTERING' || mode === 'FORMED') {
+                let localTime = elapsed - this.delay;
+                if (localTime <= 0) return;
+
+                let t = localTime / this.duration;
+
+                if (t >= 1) {
+                    let tx = this.targetX;
+                    let ty = this.targetY;
+
+                    if (this.isAura && mode === 'FORMED') {
+                        tx += Math.cos(this.phase) * this.hoverRadius;
+                        ty += Math.sin(this.phase) * this.hoverRadius;
+                        this.phase += this.hoverSpeed;
+                    }
+
+                    if (mouse.isActive && mode === 'FORMED' && this.isAura) {
+                        let dx = this.x - mouse.x;
+                        let dy = this.y - mouse.y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        let repelLimit = CONFIG.repelRadius * dpr;
+                        
+                        if (dist < repelLimit) {
+                            let force = (repelLimit - dist) / repelLimit;
+                            tx += (dx / dist) * force * CONFIG.repelForce * dpr;
+                            ty += (dy / dist) * force * CONFIG.repelForce * dpr;
+                        }
+                    }
+
+                    this.x += (tx - this.x) * 0.1;
+                    this.y += (ty - this.y) * 0.1;
+                } else {
+                    this.x = this.startX + (this.targetX - this.startX) * t;
+                    this.y = this.startY + (this.targetY - this.startY) * t;
+                }
+            }
+        }
+
+        draw() {
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x | 0, this.y | 0, this.size, this.size);
+        }
+    }
+
+    class Petal {
+        constructor(index) {
+            this.index = index;
+            if (index < 20)       { this.layer = 1; this.countInLayer = 20; this.radiusFactor = 1.0; this.widthFactor = 1.2; this.lengthFactor = 1.0; }
+            else if (index < 40)  { this.layer = 2; this.countInLayer = 20; this.radiusFactor = 0.8; this.widthFactor = 1.0; this.lengthFactor = 0.85; }
+            else if (index < 60)  { this.layer = 3; this.countInLayer = 20; this.radiusFactor = 0.6; this.widthFactor = 0.8; this.lengthFactor = 0.7; }
+            else                  { this.layer = 4; this.countInLayer = 20; this.radiusFactor = 0.45; this.widthFactor = 0.6; this.lengthFactor = 0.55; }
+
+            this.targetAngle = ( (index - (totalPetals - this.countInLayer)) / this.countInLayer ) * Math.PI * 2 + (this.layer * 0.2);
+            this.currentRadius = Math.max(canvas.width, canvas.height) + 200;
+            this.currentAngle = this.targetAngle - Math.PI * 2; 
+            this.settled = false;
+            
+            this.updateDimensions();
+        }
+
+        updateDimensions() {
+            this.targetRadius = this.radiusFactor * baseRadius; 
+            this.w = (baseRadius * 0.35) * this.widthFactor;
+            this.l = (baseRadius * 1.2) * this.lengthFactor;
+        }
+
+        update() {
+            const distDiff = this.targetRadius - this.currentRadius;
+            const angleDiff = this.targetAngle - this.currentAngle;
+            this.currentRadius += distDiff * 0.04; 
+            this.currentAngle += angleDiff * 0.04;
+            if (Math.abs(distDiff) < 1 && Math.abs(angleDiff) < 0.01) this.settled = true;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.rotate(this.currentAngle);
+            ctx.translate(0, -this.currentRadius);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-this.w * 1.3, -this.l * 0.25, -this.w * 0.9, -this.l * 0.75, 0, -this.l);
+            ctx.bezierCurveTo(this.w * 0.9, -this.l * 0.75, this.w * 1.3, -this.l * 0.25, 0, 0);
+            
+            let grad = ctx.createLinearGradient(0, 0, 0, -this.l);
+            if (this.layer === 4) {
+                grad.addColorStop(0, '#fbcfe8');   
+                grad.addColorStop(0.3, '#f472b6'); 
+                grad.addColorStop(0.7, '#db2777'); 
+                grad.addColorStop(1, '#831843');   
+            } else if (this.layer === 3) {
+                grad.addColorStop(0, '#fdf498');   
+                grad.addColorStop(0.2, '#fbcfe8'); 
+                grad.addColorStop(0.55, '#ec4899');
+                grad.addColorStop(0.9, '#9d174d');
+                grad.addColorStop(1, '#500724');
+            } else if (this.layer === 2) {
+                grad.addColorStop(0, '#ffffff');   
+                grad.addColorStop(0.15, '#fbcfe8');
+                grad.addColorStop(0.5, '#f43f5e'); 
+                grad.addColorStop(0.85, '#9f1239');
+                grad.addColorStop(1, '#4c0519');
+            } else {
+                grad.addColorStop(0, '#ffffff');
+                grad.addColorStop(0.1, '#fef08a');
+                grad.addColorStop(0.35, '#f472b6');
+                grad.addColorStop(0.75, '#be185d');
+                grad.addColorStop(1, '#3b0714');
+            }
+            
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 182, 193, 0.25)';
+            ctx.lineWidth = 0.75;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0, -this.l * 0.05);
+            ctx.lineTo(0, -this.l * 0.9); 
+            ctx.quadraticCurveTo(-this.w * 0.25, -this.l * 0.55, -this.w * 0.1, -this.l * 0.2); 
+            ctx.moveTo(0, -this.l * 0.9);
+            ctx.quadraticCurveTo(this.w * 0.25, -this.l * 0.55, this.w * 0.1, -this.l * 0.2);
+            
+            ctx.moveTo(0, -this.l * 0.4);
+            ctx.quadraticCurveTo(-this.w * 0.2, -this.l * 0.35, -this.w * 0.35, -this.l * 0.3);
+            ctx.moveTo(0, -this.l * 0.4);
+            ctx.quadraticCurveTo(this.w * 0.2, -this.l * 0.35, this.w * 0.35, -this.l * 0.3);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+    }
+
+    function spawnPetals() {
+        if (currentPetalIndex < totalPetals) {
+            petals.push(new Petal(currentPetalIndex));
+            currentPetalIndex++;
+            setTimeout(spawnPetals, 35); 
+        }
+    }
+
+    function animate() {
+        time += 0.01;
+        
+        ctx.fillStyle = '#030102'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        currentZoom += (targetZoom - currentZoom) * 0.03;
+
+        ctx.save();
+        ctx.translate(cx, cy);         
+        ctx.scale(currentZoom, currentZoom); 
+
+        let allSettled = true;
+        petals.forEach(p => {
+            p.update();
+            p.draw();
+            if (!p.settled) allSettled = false;
+        });
+
+        if (stamenOpacity > 0) {
+            ctx.save();
+            ctx.globalAlpha = stamenOpacity;
+            ctx.fillStyle = '#ffd700';
+            for(let i=0; i<36; i++) {
+                let angle = (i / 36) * Math.PI * 2 + time * 0.15;
+                let r = baseRadius * 0.46; 
+                ctx.beginPath();
+                ctx.arc(Math.cos(angle)*r, Math.sin(angle)*r, 3*dpr, 0, Math.PI*2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        if(particles.length > 0) {
+            let elapsed = Date.now() - startTime;
+            let totalTime = CONFIG.formationDuration + CONFIG.maxEntryDelay;
+            let is90PercentDone = mode === 'ENTERING' && elapsed >= (totalTime * 0.9);
+
+            if (mode === 'FORMED') {
+                ctx.save();
+                let glowGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, baseRadius * 0.45);
+                glowGrad.addColorStop(0, 'rgba(255, 255, 255, 0.25)'); 
+                glowGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                ctx.fillStyle = glowGrad;
+                ctx.beginPath();
+                ctx.arc(0, 0, baseRadius * 0.45, 0, Math.PI*2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            const len = particles.length;
+            for(let i = 0; i < len; i++) {
+                let p = particles[i];
+                
+                if (mode === 'FORMED' && finalImageOpacity > 0.95 && !p.isAura) {
+                    continue;
+                }
+                
+                p.update(elapsed);
+                p.draw();
+            }
+
+            
+            if ((mode === 'FORMED' || is90PercentDone) && originalImg) {
+                if (finalImageOpacity < 1) {
+                    finalImageOpacity += 0.005; 
+                }
+                
+                if (finalImageOpacity < 0.6) {
+                    if (blendGlow < 0.85) blendGlow += 0.03; 
+                } else {
+                    if (blendGlow > 0) blendGlow -= 0.02; 
+                }
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(0, 0, baseRadius * 0.42, 0, Math.PI * 2);
+                ctx.clip(); 
+                
+                ctx.globalAlpha = finalImageOpacity;
+                let scaleRatio = (baseRadius * 0.42) / (Math.min(originalImg.width, originalImg.height) / 2);
+                let drawW = originalImg.width * scaleRatio;
+                let drawH = originalImg.height * scaleRatio;
+                
+                ctx.drawImage(originalImg, -drawW/2, -drawH/2, drawW, drawH);
+                
+                if (blendGlow > 0) {
+                    ctx.globalCompositeOperation = 'screen';
+                    let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, baseRadius * 0.42);
+                    grad.addColorStop(0, `rgba(255, 255, 200, ${blendGlow})`);        
+                    grad.addColorStop(0.6, `rgba(255, 182, 193, ${blendGlow * 0.8})`); 
+                    grad.addColorStop(1, `rgba(255, 255, 255, 0)`);                   
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(-drawW/2, -drawH/2, drawW, drawH);
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        ctx.restore(); 
+
+        if (currentPetalIndex === totalPetals && allSettled && phase === 0) {
+            phase = 1;
+            
+            let stamenFade = setInterval(() => {
+                stamenOpacity += 0.05;
+                if (stamenOpacity >= 1) clearInterval(stamenFade);
+            }, 50);
+
+            setTimeout(() => {
+                targetZoom = window.innerWidth < 600 ? 1.8 : 2.2; 
+                
+                setTimeout(() => {
+                    if(particles.length > 0) {
+                        mode = 'ENTERING';
+                        startTime = Date.now();
+                        let totalFormationTime = CONFIG.formationDuration + CONFIG.maxEntryDelay;
+                        
+                        setTimeout(() => {
+                            mode = 'FORMED';
+                            
+                            setTimeout(() => {
+                                targetZoom = 1.0; 
+                                setTimeout(() => {
+                                    const textElement = document.getElementById('reveal-text');
+                                    textElement.style.opacity = '1';
+                                    textElement.style.transform = 'translate(-50%, 0)';
+
+                                    setTimeout(() => {
+                                        const topGreeting = document.getElementById('top-greeting');
+                                        topGreeting.style.opacity = '1';
+                                        topGreeting.style.transform = 'translate(-50%, 0)';
+                                    }, 1200);
+
+                                }, 1500);
+                            }, 4500);
+
+                        }, totalFormationTime);
+                    } else {
+                        setTimeout(() => {
+                            targetZoom = 1.0; 
+                            setTimeout(() => {
+                                const textElement = document.getElementById('reveal-text');
+                                textElement.style.opacity = '1';
+                                textElement.style.transform = 'translate(-50%, 0)';
+                              
+                                setTimeout(() => {
+                                    const topGreeting = document.getElementById('top-greeting');
+                                    topGreeting.style.opacity = '1';
+                                    topGreeting.style.transform = 'translate(-50%, 0)';
+                                }, 1200);
+
+                            }, 1500);
+                        }, 4500);
+                    }
+                }, 1000); 
+
+            }, 1000);
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    window.onload = init;
+
+</script>
+</body>
+</html>
